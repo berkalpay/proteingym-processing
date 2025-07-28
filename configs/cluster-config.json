@@ -1,0 +1,21 @@
+{
+    "__default__": {
+        "partition": "short",
+        "mem": "4G",
+        "time": "00:20:00",
+        "cores": "1",
+        "gpu": "0"
+    },
+    "align": {
+        "partition": "medium",
+        "time": "48:00:00",
+        "mem": "20G",
+        "cores": "2"
+    },
+    "couplings": {
+        "partition": "medium",
+        "time": "72:00:00",
+        "mem": "15G",
+        "cores": "2"
+    }
+}
