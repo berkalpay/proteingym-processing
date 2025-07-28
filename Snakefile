@@ -32,15 +32,3 @@ rule process_scores:
         "python scripts/process_scores.py {input} > {output}"
     conda:
         "envs/base.yaml"
-    
-
-rule finalize_metadata:
-    input:
-        pass
-    output:
-        "data/scores/{scan}.csv"
-        "data/binarization_cutoffs/{scan}.txt"
-    shell:
-        "python scripts/process_scores.py {input} > {output}"
-    conda:
-        "envs/base.yaml"
