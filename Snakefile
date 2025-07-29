@@ -18,7 +18,7 @@ rule align:
     shell:
         "python scripts/align.py {input} > {output}"
     conda:
-        "envs/evcouplings.yaml"
+        "/n/groups/marks/projects/marks_lab_and_oatml/ProteinGym2/EVCouplings/envs/pg2_evc"
 
 
 rule process_scores:
