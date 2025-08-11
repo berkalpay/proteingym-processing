@@ -13,6 +13,7 @@ def alignment_decision(summary_filepath: str) -> float:
     import pandas as pd
 
     bitscore = 0  # TODO: implement
+    STEP = 0.05
 
     # Extract alignment statistics
     alignment_stats = pd.read_csv(f"{job_name_prefix}_job_statistics_summary.csv")
@@ -22,11 +23,13 @@ def alignment_decision(summary_filepath: str) -> float:
     neff_over_l = alignment_stats.at[0, "N_eff"] / alignment_stats.at[0, "seqlen"]
 
     # Adjust alignment parameters and rerun if necessary
-    if (perc_cov < 0.7 or num_seqs < 100 or neff_over_l < 1) and bitscore - 0.05 > 0:
-        return bitscore - 0.05
-        # TODO: stop if Neff/L < 1 after three tries
-    if neff_over_l > 100 and bitscore + 0.05 < 2:
-        return bitscore + 0.05  # TODO: skip 1.0
+    if (perc_cov < 0.7 or num_seqs < 100 or neff_over_l < 1) and bitscore - STEP > 0:
+        return bitscore - STEP
+    if neff_over_l > 100 and bitscore + STEP < 2:
+        new_bitscore = bitscore + 0.05
+        if new_bitscore == 1:
+            return bitscore + 2 * STEP
+        return new_bitscore
     else:
         return False
 
