@@ -1,15 +1,3 @@
-rule extract_metadata:
-    input:
-        ancient("data/DMS_substitutions_internal.csv")
-        "{dms}"
-    output:
-        "data/metadata/{scan}.csv"
-    shell:
-        "python scripts/extract_metadata.py {input} > {output}"  # only make if new?
-    conda:
-        "envs/base.yaml"
-
-
 checkpoint align:
     input:
         "data/metadata/{scan}.csv"

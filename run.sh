@@ -1,3 +1,5 @@
+python3 scripts/extract_metadata.py data/DMS_substitutions_internal.csv data/metadata/
+
 snakemake -n -p --use-conda \
   -j 100 \
   --cluster-config cluster-config.json \
