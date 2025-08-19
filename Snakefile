@@ -3,10 +3,10 @@ checkpoint align:
         "data/metadata/{scan}.csv",
     output:
         temp("data/EVcouplings/{scan}/{bitscore}.a2m"),
-    shell:
-        "python scripts/align.py {input} {params.bitscore} > {output}"
     conda:
         "/n/groups/marks/projects/marks_lab_and_oatml/ProteinGym2/EVCouplings/envs/pg2_evc"
+    shell:
+        "python scripts/align.py {input} {params.bitscore} > {output}"
 
 
 def alignment_decision(summary_filepath: str) -> float:
@@ -74,5 +74,3 @@ rule process_scores:
         "data/scores/{scan}.csv" "data/binarization_cutoffs/{scan}.txt",
     shell:
         "python scripts/process_scores.py {input} > {output}"
-    conda:
-        "envs/base.yaml"
