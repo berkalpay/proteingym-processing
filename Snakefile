@@ -12,7 +12,7 @@ checkpoint align:
 def alignment_decision(summary_filepath: str) -> float:
     import pandas as pd
 
-    bitscore = 0  # TODO: implement
+    bitscore = float(summary_filepath.split(os.sep)[-1].split("_alignment_statistics.csv")[0])
     STEP = 0.05
 
     # Extract alignment statistics
@@ -40,11 +40,20 @@ rule check_alignment:
     output:
         "data/final_alignments/{scan}.a2m"
     run:
-        # TODO: get last alignment
-        new_bitscore = alignment_decision()
+        alignments_dir = "data/EVcouplings/{wildcards.scan}/"
+        files_to_times = {}
+
+        for bitscore in os.listdir(alignments_dir):
+            bitscore_dir = os.path.join(alignments_dir, bitscore)
+            for filename in [f for f in os.listdir(bitscore_dir) if f.endswith("_alignment_statistics.csv")]:
+                file = os.path.join(bitscore_dir, filename)
+                files_to_times[file] = os.stat(file).st_mtime
+        latest_file = max(files_to_times, key=lambda x: files_to_times[x])
+
+        new_bitscore = alignment_decision(latest_file)
         if not new_bitscore:
             import shutil
-            shutil.copy(aln, output[0])
+            shutil.copy(latest_file.replace("_alignment_statistics.csv", ".a2m"), output[0])
         else:
             checkpoints.align.get(scan=wildcards.scan, bitscore=new_bitscore)
 
