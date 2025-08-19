@@ -13,9 +13,9 @@
         "cores": "2"
     },
     "couplings": {
-        "partition": "medium",
-        "time": "72:00:00",
-        "mem": "15G",
+        "partition": "short",
+        "time": "2:00:00",
+        "mem": "10G",
         "cores": "2"
     }
 }
