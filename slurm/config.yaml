@@ -1,0 +1,16 @@
+executor: slurm
+jobs: 100
+restart-times: 0
+latency-wait: 60
+
+default-resources:
+    slurm_partition: "short"
+    mem_mb: 2000
+    time: 20
+
+set-resources:
+    align:
+        slurm_partition: "medium"
+        mem_mb: 20000
+        time: 2880
+        cpus_per_task: 2
