@@ -17,9 +17,8 @@ target_seq_path = f"temp/{dms_id}"
 with open(target_seq_path, "w") as f:
     f.write(">{dms_id}\n")
     f.write(target_seq)
-job_name_prefix = f"data/EVcouplings/{dms_id}/bit_{bitscore}_theta_{theta}_colcov_70"
+job_name_prefix = f"data/EVcouplings/{dms_id}/{bitscore}"
 os.system(
     f"evcouplings --protein {dms_id} -b {bitscore} -s {target_seq_path}"
     f"--theta {theta} --colcov 70 --prefix {job_name_prefix} configs/align.txt --yolo"
-)
-# TODO: use --stages arg instead of separate configs?
+)  # TODO: use --stages arg instead of separate configs?
