@@ -40,7 +40,7 @@ rule check_alignment:
     input:
         "data/metadata/{scan}.csv",
     output:
-        "data/final_alignments/{scan}.a2m",
+        "data/alignments/{scan}.a2m",
     run:
         alignments_dir = "data/EVcouplings/{wildcards.scan}/"
         files_to_times = {}
