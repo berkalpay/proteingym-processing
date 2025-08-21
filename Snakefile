@@ -54,17 +54,20 @@ rule check_alignment:
             ]:
                 file = os.path.join(bitscore_dir, filename)
                 files_to_times[file] = os.stat(file).st_mtime
-        latest_file = max(files_to_times, key=lambda x: files_to_times[x])
 
-        new_bitscore = alignment_decision(latest_file)
-        if not new_bitscore:
-            import shutil
-
-            shutil.copy(
-                latest_file.replace("_alignment_statistics.csv", ".a2m"), output[0]
-            )
+        if not files_to_times:
+            checkpoints.align.get(scan=wildcards.scan, bitscore=0.7)  # TODO: adjust
         else:
-            checkpoints.align.get(scan=wildcards.scan, bitscore=new_bitscore)
+            latest_file = max(files_to_times, key=lambda x: files_to_times[x])
+            new_bitscore = alignment_decision(latest_file)
+            if not new_bitscore:
+                import shutil
+
+                shutil.copy(
+                    latest_file.replace("_alignment_statistics.csv", ".a2m"), output[0]
+                )
+            else:
+                checkpoints.align.get(scan=wildcards.scan, bitscore=new_bitscore)
 
 
 rule process_scores:
