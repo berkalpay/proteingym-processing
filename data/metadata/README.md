@@ -1,0 +1,1 @@
+Metadata for individual studies, separated from the combined metadata file, are kept here.

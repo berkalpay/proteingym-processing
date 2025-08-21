@@ -1,0 +1,1 @@
+The final effect scores of the mutations in each study is kept here.
