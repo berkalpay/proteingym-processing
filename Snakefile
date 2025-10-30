@@ -42,9 +42,10 @@ rule check_alignment:
     output:
         "data/alignments/{scan}.a2m",
     run:
-        alignments_dir = "data/EVcouplings/{wildcards.scan}/"
+        alignments_dir = f"data/EVcouplings/{wildcards.scan}/"
         files_to_times = {}
 
+        os.makedirs(alignments_dir, exist_ok=True)
         for bitscore in os.listdir(alignments_dir):
             bitscore_dir = os.path.join(alignments_dir, bitscore)
             for filename in [
