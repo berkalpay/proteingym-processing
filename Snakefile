@@ -1,3 +1,14 @@
+from glob import glob
+from snakemake.io import glob_wildcards
+
+(scans,) = glob_wildcards("data/metadata/{scan}.csv")
+
+
+rule all:
+    input:
+        expand("data/alignments/{scan}.a2m", scan=scans),
+
+
 checkpoint align:
     input:
         "data/metadata/{scan}.csv",
