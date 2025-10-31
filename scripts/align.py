@@ -3,17 +3,19 @@ import sys
 import pandas as pd
 
 
-# Extract relevant metadata
 metadata_path = sys.argv[1]
-metadata = pd.read_csv(metadata_path)
-dms_id = metadata.at[0, "dms_id"]
-virus = metadata.at[0, "taxon"] == "Virus"
-target_seq = metadata.at[0, "target_seq"]
+bitscore = sys.argv[2]
 
-# Set parameters and run alignment
+# Extract relevant metadata
+metadata = pd.read_csv(metadata_path)
+dms_id = metadata.at[0, "DMS_id"]
+virus = metadata.at[0, "taxon"] == "Virus"
+target_seq = metadata.at[0, "target_aa_seq"]
+
+# Run alignment
 theta = 1 - (0.01 if virus else 0.2)
-bitscore = 0.2 if virus else 0.7
-target_seq_path = f"temp/{dms_id}"
+os.makedirs("data/temp/", exist_ok=True)
+target_seq_path = f"data/temp/{dms_id}"
 with open(target_seq_path, "w") as f:
     f.write(">{dms_id}\n")
     f.write(target_seq)
