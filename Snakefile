@@ -2,14 +2,15 @@ checkpoint align:
     input:
         "data/metadata/{scan}.csv",
     output:
-        temp("data/EVcouplings/{scan}/{bitscore}.a2m"),
+        "data/EVcouplings/{scan}/{bitscore}.a2m",
     conda:
         "/n/groups/marks/projects/marks_lab_and_oatml/ProteinGym2/EVCouplings/envs/pg2_evc"
     shell:
-        "python scripts/align.py {input} {params.bitscore} > {output}"
+        "python scripts/align.py {input} {wildcards.bitscore} > {output}"
 
 
-def alignment_decision(summary_filepath: str) -> float:
+def alignment_decision(summary_filepath: str) -> float | bool:
+    import os
     import pandas as pd
 
     bitscore = float(
@@ -17,58 +18,55 @@ def alignment_decision(summary_filepath: str) -> float:
     )
     STEP = 0.05
 
-    # Extract alignment statistics
-    alignment_stats = pd.read_csv(f"{job_name_prefix}_job_statistics_summary.csv")
-    assert len(alignment_stats) == 1
+    alignment_stats = pd.read_csv(
+        f"{summary_filepath.rsplit('/',1)[0]}/../{bitscore}_job_statistics_summary.csv"
+    )
     perc_cov = alignment_stats.at[0, "perc_cov"]
     num_seqs = alignment_stats.at[0, "num_seqs"]
     neff_over_l = alignment_stats.at[0, "N_eff"] / alignment_stats.at[0, "seqlen"]
 
-    # Adjust alignment parameters and rerun if necessary
     if (perc_cov < 0.7 or num_seqs < 100 or neff_over_l < 1) and bitscore - STEP > 0:
-        return bitscore - STEP
+        return round(bitscore - STEP, 2)
     if neff_over_l > 100 and bitscore + STEP < 2:
-        new_bitscore = bitscore + 0.05
-        if new_bitscore == 1:
-            return bitscore + 2 * STEP
-        return new_bitscore
-    else:
-        return False
+        new_bitscore = round(bitscore + STEP, 2)
+        return round(bitscore + 2 * STEP, 2) if new_bitscore == 1 else new_bitscore
+    return False
+
+
+def choose_alignment(wildcards):
+    import os
+
+    # Get statistics of alignments already produced
+    alignments_dir = f"data/EVcouplings/{wildcards.scan}"
+    stats_files = []
+    if os.path.isdir(alignments_dir):
+        for bitscore in os.listdir(alignments_dir):
+            bitscore_dir = os.path.join(alignments_dir, bitscore)
+            if not os.path.isdir(bitscore_dir):
+                continue
+            for f in os.listdir(bitscore_dir):
+                if f.endswith("_alignment_statistics.csv"):
+                    stats_files.append(os.path.join(bitscore_dir, f))
+
+    # Produce an initial alignment if there are none
+    if not stats_files:
+        return checkpoints.align.get(scan=wildcards.scan, bitscore=0.70).output[0]
+
+    # Based on the latest alignment, decide whether to accept it or try a new bitscore
+    latest_stats_file = max(stats_files, key=lambda p: os.stat(p).st_mtime)
+    new_bitscore = alignment_decision(latest_stats_file)
+    if not new_bitscore:
+        return latest_stats_file.replace("_alignment_statistics.csv", ".a2m")
+    return checkpoints.align.get(scan=wildcards.scan, bitscore=new_bitscore).output[0]
 
 
 rule check_alignment:
     input:
-        "data/metadata/{scan}.csv",
+        choose_alignment,
     output:
         "data/alignments/{scan}.a2m",
-    run:
-        alignments_dir = f"data/EVcouplings/{wildcards.scan}/"
-        files_to_times = {}
-
-        os.makedirs(alignments_dir, exist_ok=True)
-        for bitscore in os.listdir(alignments_dir):
-            bitscore_dir = os.path.join(alignments_dir, bitscore)
-            for filename in [
-                f
-                for f in os.listdir(bitscore_dir)
-                if f.endswith("_alignment_statistics.csv")
-            ]:
-                file = os.path.join(bitscore_dir, filename)
-                files_to_times[file] = os.stat(file).st_mtime
-
-        if not files_to_times:
-            checkpoints.align.get(scan=wildcards.scan, bitscore=0.7)  # TODO: adjust
-        else:
-            latest_file = max(files_to_times, key=lambda x: files_to_times[x])
-            new_bitscore = alignment_decision(latest_file)
-            if not new_bitscore:
-                import shutil
-
-                shutil.copy(
-                    latest_file.replace("_alignment_statistics.csv", ".a2m"), output[0]
-                )
-            else:
-                checkpoints.align.get(scan=wildcards.scan, bitscore=new_bitscore)
+    shell:
+        "cp {input} {output}"
 
 
 rule process_scores:
