@@ -46,6 +46,7 @@ def alignment_decision(summary_filepath: str) -> float | bool:
 
 def choose_alignment(wildcards):
     import os
+    import pandas as pd
 
     # Get statistics of alignments already produced
     alignments_dir = f"data/EVcouplings/{wildcards.scan}"
@@ -61,7 +62,11 @@ def choose_alignment(wildcards):
 
     # Produce an initial alignment if there are none
     if not stats_files:
-        return checkpoints.align.get(scan=wildcards.scan, bitscore=0.70).output[0]
+        metadata = pd.read_csv(f"data/metadata/{wildcards.scan}.csv")
+        initial_bitscore = 0.2 if metadata.at[0, "taxon"] == "Virus" else 0.7
+        return checkpoints.align.get(
+            scan=wildcards.scan, bitscore=initial_bitscore
+        ).output[0]
 
     # Based on the latest alignment, decide whether to accept it or try a new bitscore
     latest_stats_file = max(stats_files, key=lambda p: os.stat(p).st_mtime)
