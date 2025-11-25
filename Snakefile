@@ -29,9 +29,7 @@ def alignment_decision(summary_filepath: str) -> float | bool:
     )
     STEP = 0.05
 
-    alignment_stats = pd.read_csv(
-        f"{summary_filepath.rsplit('/',1)[0]}/../{bitscore}_job_statistics_summary.csv"
-    )
+    alignment_stats = pd.read_csv(summary_filepath)
     perc_cov = alignment_stats.at[0, "perc_cov"]
     num_seqs = alignment_stats.at[0, "num_seqs"]
     neff_over_l = alignment_stats.at[0, "N_eff"] / alignment_stats.at[0, "seqlen"]
@@ -53,7 +51,7 @@ def choose_alignment(wildcards):
     stats_files = []
     if os.path.isdir(alignments_dir):
         for bitscore in os.listdir(alignments_dir):
-            bitscore_dir = os.path.join(alignments_dir, bitscore)
+            bitscore_dir = os.path.join(alignments_dir, bitscore, "align")
             if not os.path.isdir(bitscore_dir):
                 continue
             for f in os.listdir(bitscore_dir):
