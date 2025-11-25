@@ -20,7 +20,7 @@ checkpoint align:
         "python scripts/align.py {input} {wildcards.bitscore}"
 
 
-def alignment_decision(summary_filepath: str) -> float | bool:
+def alignment_decision(summary_filepath: str) -> float | None:
     import os
     import pandas as pd
 
@@ -39,17 +39,16 @@ def alignment_decision(summary_filepath: str) -> float | bool:
     if neff_over_l > 100 and bitscore + STEP < 2:
         new_bitscore = round(bitscore + STEP, 2)
         return round(bitscore + 2 * STEP, 2) if new_bitscore == 1 else new_bitscore
-    return False
+    return None
 
 
-def choose_alignment(wildcards):
+def stats(wildcards):
     import os
     import pandas as pd
 
-    # Get statistics of alignments already produced
     alignments_dir = f"data/EVcouplings/{wildcards.scan}"
     stats_files = []
-    if os.path.isdir(alignments_dir):
+    if os.path.isdir(alignments_dir):  # Read stats of existing alignments
         for bitscore in os.listdir(alignments_dir):
             bitscore_dir = os.path.join(alignments_dir, bitscore, "align")
             if not os.path.isdir(bitscore_dir):
@@ -58,29 +57,41 @@ def choose_alignment(wildcards):
                 if f.endswith("_alignment_statistics.csv"):
                     stats_files.append(os.path.join(bitscore_dir, f))
 
-    # Produce an initial alignment if there are none
-    if not stats_files:
+    if not stats_files:  # Make initial alignment
         metadata = pd.read_csv(f"data/metadata/{wildcards.scan}.csv")
         initial_bitscore = 0.2 if metadata.at[0, "taxon"] == "Virus" else 0.7
-        return checkpoints.align.get(
+        a2m = checkpoints.align.get(
             scan=wildcards.scan, bitscore=initial_bitscore
         ).output[0]
+        return a2m.replace(".a2m", "_alignment_statistics.csv")
 
-    # Based on the latest alignment, decide whether to accept it or try a new bitscore
-    latest_stats_file = max(stats_files, key=lambda p: os.stat(p).st_mtime)
-    new_bitscore = alignment_decision(latest_stats_file)
-    if not new_bitscore:
-        return latest_stats_file.replace("_alignment_statistics.csv", ".a2m")
-    return checkpoints.align.get(scan=wildcards.scan, bitscore=new_bitscore).output[0]
+    return max(stats_files, key=lambda p: os.stat(p).st_mtime)
 
 
-rule check_alignment:
+rule drive_alignment:
     input:
-        choose_alignment,
+        stats,
     output:
         "data/alignments/{scan}.a2m",
-    shell:
-        "cp {input} {output}"
+    run:
+        import os
+        import shutil
+
+        stats_file = str(input[0])
+        new_bitscore = alignment_decision(stats_file)
+
+        if new_bitscore is None:  # Finalize alignment
+            shutil.copy(
+                stats_file.replace("_alignment_statistics.csv", ".a2m"), output[0]
+            )
+        else:
+            a2m = checkpoints.align.get(
+                scan=wildcards.scan, bitscore=new_bitscore
+            ).output[0]
+            raise ValueError(
+                f"Triggered new alignment at bitscore={new_bitscore}, "
+                f"producing {a2m}; re-run needed to continue."
+            )  # Make Snakemake rerun this rule
 
 
 rule process_scores:

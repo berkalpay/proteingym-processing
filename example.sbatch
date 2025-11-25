@@ -10,4 +10,4 @@ python3 scripts/extract_metadata.py data/DMS_substitutions_internal.csv data/met
 
 # NOTE: make sure to activate an environment that has snakemake
 # Tells snakemake to generate the final alignment for this protein
-snakemake data/alignments/DYR_ECOLI_Thompson_2019.a2m -p --use-conda --profile slurm
+snakemake data/alignments/DYR_ECOLI_Thompson_2019.a2m -p --use-conda --profile slurm --retries 15
