@@ -76,13 +76,13 @@ rule align:
                 stats_file.replace("_alignment_statistics.csv", ".a2m"), output[0]
             )
         else:
-            os.system(
+            shell(
                 f"python scripts/align.py data/metadata/{wildcards.scan}.csv {new_bitscore}"
             )
             raise ValueError(
                 f"Triggered new alignment at bitscore={new_bitscore}, "
-                f"producing {a2m}; re-run needed to continue."
-            )  # Make Snakemake rerun this rule
+                f"re-run needed to continue."
+            )
 
 
 rule process_scores:
