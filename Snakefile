@@ -68,11 +68,13 @@ def stats(wildcards):
     return max(stats_files, key=lambda p: os.stat(p).st_mtime)
 
 
-rule drive_alignment:
+rule align:
     input:
         stats,
     output:
         "data/alignments/{scan}.a2m",
+    conda:
+        "/n/groups/marks/projects/marks_lab_and_oatml/ProteinGym2/EVCouplings/envs/pg2_evc"
     run:
         import os
         import shutil
@@ -85,9 +87,9 @@ rule drive_alignment:
                 stats_file.replace("_alignment_statistics.csv", ".a2m"), output[0]
             )
         else:
-            a2m = checkpoints.align.get(
-                scan=wildcards.scan, bitscore=new_bitscore
-            ).output[0]
+            os.system(
+                f"python scripts/align.py data/metadata/{wildcards.scan}.csv {new_bitscore}"
+            )
             raise ValueError(
                 f"Triggered new alignment at bitscore={new_bitscore}, "
                 f"producing {a2m}; re-run needed to continue."
