@@ -9,17 +9,6 @@ rule all:
         expand("data/alignments/{scan}.a2m", scan=scans),
 
 
-checkpoint align:
-    input:
-        "data/metadata/{scan}.csv",
-    output:
-        "data/EVcouplings/{scan}/{bitscore}/align/{bitscore}.a2m",
-    conda:
-        "/n/groups/marks/projects/marks_lab_and_oatml/ProteinGym2/EVCouplings/envs/pg2_evc"
-    shell:
-        "python scripts/align.py {input} {wildcards.bitscore}"
-
-
 def alignment_decision(summary_filepath: str) -> float | None:
     import os
     import pandas as pd
